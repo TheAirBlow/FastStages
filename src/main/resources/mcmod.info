@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "geolosyshax",
+    "name": "GeolosysHax",
+    "description": "Finds geolosys ore veins for you automatically",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/TheAirBlow/GeolosysHax",
+    "updateUrl": "",
+    "authorList": [
+      "TheAirBlow"
+    ],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
