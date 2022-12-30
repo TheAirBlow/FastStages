@@ -13,20 +13,21 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.theairblow.capatible.annotations.EventHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @EventHandler
 public class MainHandler {
     private static final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private static final HashMap<IOre, List<BlockPos>> veins = new HashMap<>();
     private static final List<ChunkPos> pos = new ArrayList<>();
-    private static boolean enabled = false;
 
     @SubscribeEvent
     public static void onLoad(ChunkEvent.Load event) {
-        if (!enabled) return;
         executor.execute(() -> {
             final Chunk chunk = event.getChunk();
             final List<IBlockState> blocks = new ArrayList<>();
@@ -61,9 +62,15 @@ public class MainHandler {
                                 || pos.contains(new ChunkPos(cx + 1, cz - 1))
                                 || pos.contains(new ChunkPos(cx - 1, cz + 1)))
                             return;
-                        GeolosysUtil.sendToChat("§2Found §3" + name + "§2 at §a"
-                                + start.getX() + " " + start.getY() + " " + start.getZ());
                         pos.add(chunk.getPos());
+                    }
+
+                    synchronized(veins) {
+                        if (!veins.containsKey(deposit.get()))
+                            veins.put(deposit.get(), new ArrayList<>());
+                        final List<BlockPos> list = veins.get(deposit.get());
+                        if (list.contains(start)) return;
+                        list.add(start);
                     }
                 }
             }
@@ -77,55 +84,88 @@ public class MainHandler {
         if (!message.startsWith("!hax")) return;
         final String[] args = message.split(" ");
         if (args.length == 1)
-            GeolosysUtil.sendToChat("" + // This is here just so IntelliJ places the "str:" here
-                    "§2!hax [enable/disable] - §3Automatically finds veins in chunks\n" +
+            GeolosysUtil.sendToChat("§6Veins in the ignore list are still added to history!\n" +
+                    "§2!hax found <ID> <page> - §3Lists all coords of veins with that ID\n" +
                     "§2!hax info <ID> - §3Prints all info about a specific ore vein\n" +
+                    "§2!hax found list - §3Tells you what veins were found\n" +
                     "§2!hax list - §3Lists all vein names and their IDs\n" +
-                    "§2!hax clear - §3Clears internal ore vein history", true);
+                    "§2!hax clear - §3Clears found ore veins list", true);
         else switch (args[1]) {
-            case "enable":
-                GeolosysUtil.sendToChat("§2Ready to search for veins and spam your chat!");
-                enabled = true;
-                break;
-            case "disable":
-                GeolosysUtil.sendToChat("§4Stopped annoying you with too many messages in chat.");
-                enabled = false;
-                break;
             case "clear":
-                GeolosysUtil.sendToChat("§2Successfully cleared ore vein history!");
+                GeolosysUtil.sendToChat("§2Successfully cleared found veins list!");
                 synchronized(pos) {
                     pos.clear();
+                }
+                synchronized(veins) {
+                    veins.clear();
+                }
+                break;
+            case "found":
+                if (args.length < 3)
+                    GeolosysUtil.sendToChat("§6Usage: §c!hax found <ID> <page> §6/ §c!hax found list");
+                else if (args[2].equals("list")) {
+                    GeolosysUtil.sendToChat("§c====== §2List of all found veins§c ======", true);
+                    ArrayList<IOre> oreBlocks = GeolosysAPI.oreBlocks;
+                    for (int i = 0; i < oreBlocks.size(); i++) {
+                        IOre vein = oreBlocks.get(i);
+                        if (veins.containsKey(vein))
+                            GeolosysUtil.sendToChat("§3-> §a" + vein.getFriendlyName()
+                                    + "§5 (ID: " + i + ", " + veins.get(vein).size() + "veins)", true);
+                        else GeolosysUtil.sendToChat("§3-> §4" + vein.getFriendlyName()
+                                + "§5 (ID: " + i + ")", true);
+                    }
+                } else try {
+                    int page;
+                    final int id = Integer.parseInt(args[2]);
+                    if (args.length < 4) page = 1;
+                    else page = Integer.parseInt(args[3]);
+                    final IOre vein = (IOre)GeolosysAPI.oreBlocks.toArray()[id];
+                    final int pages = (int)Math.ceil(veins.get(vein).size() / 10D);
+                    if (veins.containsKey(vein)) {
+                        if (page > pages) GeolosysUtil.sendToChat("§4This page doesn't exist (there's only " + pages + ")");
+                        else if (page < 1) GeolosysUtil.sendToChat("§4Pages start at one and can't be negative!");
+                        else {
+                            GeolosysUtil.sendToChat("§c====== §2" + vein.getFriendlyName()
+                                    + " §a(Page " + page + "/" + pages + ")§c ======", true);
+                            for (BlockPos pos : veins.get(vein).stream().skip((page - 1) * 10L)
+                                    .limit(10).collect(Collectors.toList()))
+                                GeolosysUtil.sendToChat("§3-> §a" + pos.getX() + " "
+                                        + pos.getY() + " " + pos.getZ(), true);
+                        }
+                    } else GeolosysUtil.sendToChat("§4No veins were found yet!");
+                } catch (Exception e) {
+                    GeolosysUtil.sendToChat("§4Invalid ID or page number!");
                 }
                 break;
             case "info":
                 if (args.length < 3)
-                    GeolosysUtil.sendToChat("§6Usage: §c !hax info <ID>");
+                    GeolosysUtil.sendToChat("§6Usage: §c!hax info <ID>");
                 else {
                     try {
                         final int id = Integer.parseInt(args[2]);
                         final IOre vein = (IOre)GeolosysAPI.oreBlocks.toArray()[id];
                         final Optional<List<String>> biomes = GeolosysUtil.listBiomes(vein);
-                        GeolosysUtil.sendToChat("====== §2Info for \"" + vein.getFriendlyName() + "\"§r ======", true);
+                        GeolosysUtil.sendToChat("§c====== §2Info for §a\"" + vein.getFriendlyName() + "\"§c ======", true);
                         if (biomes.isPresent()) {
                             GeolosysUtil.sendToChat("§2Biomes list:", true);
                             for (String str : biomes.get()) {
-                                GeolosysUtil.sendToChat("§3-> §a " + str, true);
+                                GeolosysUtil.sendToChat("§3-> §a" + str, true);
                             }
                         }
-                        GeolosysUtil.sendToChat("§2Y from " + vein.getYMin() + " to " + vein.getYMax(), true);
-                        GeolosysUtil.sendToChat("§2Density: " + vein.getDensity(), true);
-                        GeolosysUtil.sendToChat("§2Chance: " + vein.getChance(), true);
-                        GeolosysUtil.sendToChat("§2Size: " + vein.getSize(), true);
+                        GeolosysUtil.sendToChat("§2Y from §a" + vein.getYMin() + "§2 to §a" + vein.getYMax(), true);
+                        GeolosysUtil.sendToChat("§2Density: §a" + vein.getDensity(), true);
+                        GeolosysUtil.sendToChat("§2Chance: §a" + vein.getChance(), true);
+                        GeolosysUtil.sendToChat("§2Size: §a" + vein.getSize(), true);
                     } catch (Exception e) {
                         GeolosysUtil.sendToChat("§4Invalid ID!");
                     }
                 }
                 break;
             case "list":
-                GeolosysUtil.sendToChat("====== §2List of all ore veins:§r ======", true);
+                GeolosysUtil.sendToChat("§c====== §2List of all ore veins:§c ======", true);
                 for (int i = 0; i < GeolosysAPI.oreBlocks.size(); i++) {
                     final IOre vein = GeolosysAPI.oreBlocks.get(i);
-                    GeolosysUtil.sendToChat("§3-> §a " + vein.getFriendlyName()
+                    GeolosysUtil.sendToChat("§3-> §a" + vein.getFriendlyName()
                             + "§c (ID: " + i + ")", true);
                 }
                 break;

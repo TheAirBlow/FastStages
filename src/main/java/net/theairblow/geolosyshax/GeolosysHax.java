@@ -20,7 +20,7 @@ import org.lwjgl.input.Keyboard;
 public class GeolosysHax {
     public static final String MOD_ID = "geolosyshax";
     public static final String MOD_NAME = "GeolosysHax";
-    public static final String VERSION = "1.1.1";
+    public static final String VERSION = "1.2.0";
     public static Logger LOGGER;
 
     @Mod.EventHandler
