@@ -20,14 +20,11 @@ import org.lwjgl.input.Keyboard;
 public class GeolosysHax {
     public static final String MOD_ID = "geolosyshax";
     public static final String MOD_NAME = "GeolosysHax";
-    public static final String VERSION = "1.0.0";
-
-    public static final KeyBinding BINDING = new KeyBinding("Enable/disable", Keyboard.KEY_F10, "GeolosysHax");
+    public static final String VERSION = "1.1.0";
     public static Logger LOGGER;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        ClientRegistry.registerKeyBinding(BINDING);
         Capatible.handleMod(MOD_ID);
         LOGGER = event.getModLog();
     }
