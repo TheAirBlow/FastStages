@@ -45,11 +45,11 @@ public class GeolosysUtil {
             if (ore instanceof DepositMultiOre) {
                 final DepositMultiOre deposit = (DepositMultiOre) ore;
                 if (deposit.getOres().contains(state)) {
-                    x = chunk.x * 16 + x; z = chunk.x * 16 + z;
+                    x = chunk.x * 16 + x; z = chunk.z * 16 + z;
                     return new BlockPos(x, y, z);
                 }
             } else if (ore.getOre().equals(state)) {
-                x = chunk.x * 16 + x; z = chunk.x * 16 + z;
+                x = chunk.x * 16 + x; z = chunk.z * 16 + z;
                 return new BlockPos(x, y, z);
             }
         }
