@@ -1,16 +1,20 @@
 package net.theairblow.faststages;
 
+import com.blamejared.recipestages.config.Configurations;
 import com.blamejared.recipestages.handlers.Recipes;
 import com.blamejared.recipestages.proxy.ClientProxy;
 import com.blamejared.recipestages.proxy.CommonProxy;
 import mezz.jei.api.recipe.IRecipeWrapper;
 import mezz.jei.api.recipe.VanillaRecipeCategoryUid;
+import mezz.jei.collect.SetMultiMap;
+import mezz.jei.recipes.RecipeRegistry;
 import net.darkhax.gamestages.GameStageHelper;
 import net.darkhax.gamestages.data.GameStageSaveHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.crafting.IRecipe;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import org.apache.commons.lang3.time.StopWatch;
 import org.spongepowered.asm.mixin.Mixin;
 
@@ -30,11 +34,12 @@ public class MixinClientProxy extends CommonProxy {
     @Override
     public void syncJEI(EntityPlayer player) {
         executor.execute(() -> {
-            final Minecraft minecraft = Minecraft.getMinecraft();
             if (recipeRegistry == null || player == null ||
                     GameStageHelper.getPlayerData(player) == null) return;
-
+            if (!Configurations.showRecipe) return;
             StopWatch watch = new StopWatch(); watch.start();
+            SetMultiMap<String, IRecipeWrapper> hiddenRecipes = ReflectionHelper.getPrivateValue(
+                    RecipeRegistry.class, (RecipeRegistry) recipeRegistry, "hiddenRecipes");
             Collection<String> current = GameStageSaveHandler.clientData.getStages();
             Collection<String> added = new ArrayList<>(current); added.removeAll(stages);
             Collection<String> removed = new ArrayList<>(stages); removed.removeAll(current);
@@ -43,19 +48,17 @@ public class MixinClientProxy extends CommonProxy {
                 for (IRecipe recipe : Recipes.recipes.get(stage)) {
                     IRecipeWrapper wrapper = recipeRegistry.getRecipeWrapper(recipe, guid);
                     if (wrapper == null) continue;
-                    recipeRegistry.unhideRecipe(wrapper, guid);
+                    hiddenRecipes.remove(guid, wrapper);
                 }
 
             for (String stage : removed)
                 for (IRecipe recipe : Recipes.recipes.get(stage)) {
                     IRecipeWrapper wrapper = recipeRegistry.getRecipeWrapper(recipe, guid);
                     if (wrapper == null) continue;
-                    recipeRegistry.hideRecipe(wrapper, guid);
+                    hiddenRecipes.put(guid, wrapper);
                 }
-
-            minecraft.addScheduledTask(() -> player.sendStatusMessage(new TextComponentString(
-                    "FastStages: Added " + added.size() + ", removed " + removed.size() +
-                    " in " + watch.getTime(TimeUnit.MILLISECONDS) + " ms."), true));
+            FastStages.LOGGER.info("Added " + added.size() + ", removed " + removed.size() +
+                    " in " + watch.getTime(TimeUnit.MILLISECONDS) + " ms.");
             stages = current;
         });
     }
