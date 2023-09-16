@@ -1,18 +1,18 @@
 [
   {
-    "modid": "geolosyshax",
-    "name": "GeolosysHax",
-    "description": "Finds geolosys ore veins for you automatically",
+    "modid": "faststages",
+    "name": "FastStages",
+    "description": "Fixes the nasty freeze caused by RecipeStages",
     "version": "${version}",
     "mcversion": "${mcversion}",
-    "url": "https://github.com/TheAirBlow/GeolosysHax",
+    "url": "https://github.com/TheAirBlow/FastStages",
+    "logoFile": "assets/faststages/logo.png",
     "updateUrl": "",
     "authorList": [
       "TheAirBlow"
     ],
     "credits": "",
-    "logoFile": "",
     "screenshots": [],
-    "dependencies": ["geolosys", "capatible"]
+    "dependencies": ["recipestages", "jei", "mixinbooter"]
   }
 ]

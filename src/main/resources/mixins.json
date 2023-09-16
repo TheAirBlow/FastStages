@@ -1,0 +1,11 @@
+{
+  "minVersion": "0.8.2",
+  "compatibilityLevel": "JAVA_8",
+  "package": "net.theairblow.faststages",
+  "refmap": "mixins.refmap.json",
+  "mixins": [
+    "MixinClientProxy"
+  ],
+  "client": [],
+  "server": []
+}
