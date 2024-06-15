@@ -1,15 +1,16 @@
 [
   {
-    "modid": "faststages",
+    "modid": "recipestages",
     "name": "FastStages",
-    "description": "Fixes the nasty freeze caused by RecipeStages",
-    "version": "${version}",
-    "mcversion": "${mcversion}",
+    "description": "RecipeStages but faster",
+    "version": "2.0.0",
+    "mcversion": "1.12.2",
     "url": "https://github.com/TheAirBlow/FastStages",
-    "logoFile": "assets/faststages/logo.png",
+    "logoFile": "assets/recipestages/logo.png",
     "updateUrl": "",
     "authorList": [
-      "TheAirBlow"
+      "TheAirBlow",
+      "blamejared"
     ],
     "credits": "",
     "screenshots": [],
