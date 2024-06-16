@@ -13,7 +13,7 @@ plugins {
 }
 
 group = 'com.blamejared'
-version = '2.0.0'
+version = '2.0.1'
 
 java {
     archivesBaseName = 'recipestages'
@@ -51,7 +51,7 @@ minecraft {
         }
     }
 
-    accessTransformer 'src/main/resources/recipestages_at.cfg'
+    accessTransformer 'src/main/resources/META-INF/recipestages_at.cfg'
 }
 
 sourceSets.main.resources { srcDir 'src/generated/resources' }

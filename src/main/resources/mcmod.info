@@ -3,7 +3,7 @@
     "modid": "recipestages",
     "name": "FastStages",
     "description": "RecipeStages but faster",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "mcversion": "1.12.2",
     "url": "https://github.com/TheAirBlow/FastStages",
     "logoFile": "assets/recipestages/logo.png",
